@@ -1,12 +1,12 @@
-# Password Manager (Kelompok 14)
+# Snake Game (Kelompok 14)
 
 Dibuat oleh :
 Ramadhan Kalih Sewu (1806148826) dan
 Diaz Ilyasa Azrurrafi Saiful (1806200154)
 
 ## User Interface
-- Classic Terminal-Base Program, <windows.h> only for Windows User
-- Improve Text User Interface using <curses.h>
+- Windows Application using WinApi <windows.h>
+- Based on Button and Mouse click Event
 - Minimalist Design
 
 ![](Image/Screenshot_1.png)
