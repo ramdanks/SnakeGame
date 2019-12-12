@@ -70,32 +70,28 @@ Diaz Ilyasa Azrurrafi Saiful (1806200154)
     struct node *current = NULL;
 
     //Create Linked List
-void insert(char *user, int point)
-{
-   // Allocate memory for new node;
-   struct node *link = (struct node*) malloc(sizeof(struct node));
-
-	// Set value
-   strcpy(link->name, user);
-   link->point = point;
-   link->next = NULL;
-
-   // If head is empty, create new list
-   if(head==NULL)
+    void insert(char *user, int point)
     {
-      head = link;
-      return;
-   }
+       // Allocate memory for new node;
+       struct node *link = (struct node*) malloc(sizeof(struct node));
+       // Set value
+       strcpy(link->name, user);
+       link->point = point;
+       link->next = NULL;
 
-   current = head;
-
-   // move to the end of the list
-   while(current->next!=NULL)
-      current = current->next;
-
-   // Insert link at the end of the list
-   current->next = link;
-}
+       // If head is empty, create new list
+       if(head==NULL)
+       {
+          head = link;
+          return;
+       }
+       current = head;
+       // move to the end of the list
+       while(current->next!=NULL)
+           current = current->next;
+       // Insert link at the end of the list
+       current->next = link;
+    }
 ```
 
 ### Decrypt
