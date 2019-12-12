@@ -93,26 +93,64 @@ Diaz Ilyasa Azrurrafi Saiful (1806200154)
 ```
 
 ### Bubble Sort Linked-List Data Type
-- Feature
-![](Image/Screenshot_4.png)
-- View
-![](Image/Screenshot_5.png)
 ```bash
-      for(i = 0; (i < sz && str[i] != '\0'); i++)
-      {
-        if (i<2)
-            str[i] = str[i] - 3;
-        else if (i<4)
-            str[i] = str[i] - 5;
-        else if (i<6)
-            str[i] = str[i] - 11;
-        else if (i<8)
-            str[i] = str[i] + 7;
-        else if (i<10)
-            str[i] = str[i] + 10;
-        else if (i>=10)
-            str[i] = str[i] - 1 - i;
-      }
+struct node* ptr = (struct node*) malloc(sizeof(struct node));
+    struct node* ptr2 = (struct node*) malloc(sizeof(struct node));
+
+    int temp_p;
+    char temp_n[16];
+
+    ptr = head;
+    if (ptr == NULL)
+        return;
+
+    ptr2 = ptr->next;
+    if (ptr2 == NULL)
+        return;
+
+    int i, j;
+    calculate();
+
+    for(i = 0 ; i < count*count; i++)
+    {
+        if (ptr->point < ptr2->point)
+        {
+            //Simpan ptr(1st) ke Temp
+            temp_p = ptr->point;
+            strcpy(temp_n, ptr->name);
+            //Masukkan data ptr(2nd) ke ptr(1st)
+            ptr->point = ptr2->point;
+            strcpy(ptr->name, ptr2->name);
+            //Masukan ptr(1st) yang telah disimpan diTemp ke ptr(2nd)
+            ptr2->point = temp_p;
+            strcpy(ptr2->name, temp_n);
+            //Lanjut looping untuk data selanjutntya
+            ptr = ptr->next;
+            ptr2 = ptr2->next;
+            //ptr ga perlu di set ke ptr->next, karena nilai ptr kan sudah di swap sama ptr2
+            if (ptr2 == NULL)
+            {
+                ptr = head;
+                ptr2 = ptr->next;
+            }
+        }
+        else
+        {
+            ptr = ptr->next;
+            if (ptr==NULL)
+            {
+                ptr = head;
+                ptr2 = ptr->next;
+            }
+            ptr2 = ptr2->next;
+            if (ptr2==NULL)
+            {
+                ptr = head;
+                ptr2 = ptr->next;
+            }
+        }
+    }
+    count=0;
 ```
 
 ### Write or Read Files
