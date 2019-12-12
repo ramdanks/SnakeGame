@@ -11,24 +11,47 @@ Diaz Ilyasa Azrurrafi Saiful (1806200154)
 
 ![](Image/Screenshot_1.png)
 
-### Using Curses.H
+### Register Main Window Class
 ```bash
-    //Menjalankan Ncurses
-    initscr();
-    cbreak();
+    WNDCLASSEXW wcex;
+    
+    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.style          = 0;
+    wcex.lpfnWndProc    = MainProc;
+    wcex.cbClsExtra     = 0;
+    wcex.cbWndExtra     = 0;
+    wcex.hInstance      = hInstance;
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON));
+    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.lpszMenuName   = NULL;
+    wcex.lpszClassName  = MainClass;
+    wcex.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
+
+    return RegisterClassExW(&wcex);
 ```
 
-### Create Window in Curses.H
+### Create Main Window Class
 ```bash
-    WINDOW *win;
-    win = newwin(YLength, XLength, YCoord, XCoord);
-    refresh();
-    wrefresh(win);
+    hInst = hInstance; // Store instance handle in our global variable
+    center_window(GetDesktopWindow(), 960, 600);
+    hWnd = CreateWindowW   (MainClass, "Snake", WS_SYSMENU | WS_MINIMIZEBOX,
+                            rect.left, rect.top, 960, 600,
+                            NULL, NULL, hInstance, NULL);
+    if (!hWnd)
+    {
+        return FALSE;
+    }
+    ShowWindow(hWnd, nCmdShow);
+    UpdateWindow(hWnd);
+    return TRUE;
 ```
 
 ## Cakupan Program
-- ASCII Shifter (Using Array) for Encrypt and Decrypt
-- File Pointer (fopen in <windows.h>) for Saving, Importing, and Modify File
+- Linked-List Data Structure (Import and Export Player Scores)
+- Pointer and Long Pointer (LPCSTR) used by Windows
+- Bubble Sort (Sort player scores to justify the Leaderboard) 
+
 ![](Image/Screenshot_3.png)
 
 ### Encrypt
