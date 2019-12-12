@@ -52,11 +52,11 @@ Diaz Ilyasa Azrurrafi Saiful (1806200154)
 - Pointer and Long Pointer (LPCSTR) used by Windows
 - Bubble Sort (Sort player scores to justify the Leaderboard) 
 
-![](Image/Screenshot_3.png)
+![](Image/Screenshot_2.png)
 
 ### Encrypt
 - View
-![](Image/Screenshot_2.png)
+![](Image/Screenshot_3.png)
 ```bash
       for(i = 0; (i < sz && str[i] != '\0'); i++)
       {
