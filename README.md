@@ -54,9 +54,7 @@ Diaz Ilyasa Azrurrafi Saiful (1806200154)
 
 ![](Image/Screenshot_2.png)
 
-### Encrypt
-- View
-![](Image/Screenshot_3.png)
+### Create Linked-List Data Structure
 ```bash
     struct node 
     {
@@ -94,7 +92,7 @@ Diaz Ilyasa Azrurrafi Saiful (1806200154)
     }
 ```
 
-### Decrypt
+### Bubble Sort Linked-List Data Type
 - Feature
 ![](Image/Screenshot_4.png)
 - View
