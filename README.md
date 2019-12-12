@@ -58,21 +58,44 @@ Diaz Ilyasa Azrurrafi Saiful (1806200154)
 - View
 ![](Image/Screenshot_3.png)
 ```bash
-      for(i = 0; (i < sz && str[i] != '\0'); i++)
-      {
-        if (i<2)
-            str[i] = str[i] + 3;
-        else if (i<4)
-            str[i] = str[i] + 5;
-        else if (i<6)
-            str[i] = str[i] + 11;
-        else if (i<8)
-            str[i] = str[i] - 7;
-        else if (i<10)
-            str[i] = str[i] - 10;
-        else if (i>=10)
-            str[i] = str[i] + 1 + i;
-      }
+    struct node 
+    {
+        char name[16];
+        int point;
+        struct node *next;
+    } *rear, *temp;
+
+    // Generate Node pointer
+    struct node *head = NULL;
+    struct node *current = NULL;
+
+    //Create Linked List
+void insert(char *user, int point)
+{
+   // Allocate memory for new node;
+   struct node *link = (struct node*) malloc(sizeof(struct node));
+
+	// Set value
+   strcpy(link->name, user);
+   link->point = point;
+   link->next = NULL;
+
+   // If head is empty, create new list
+   if(head==NULL)
+    {
+      head = link;
+      return;
+   }
+
+   current = head;
+
+   // move to the end of the list
+   while(current->next!=NULL)
+      current = current->next;
+
+   // Insert link at the end of the list
+   current->next = link;
+}
 ```
 
 ### Decrypt
