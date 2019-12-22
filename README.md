@@ -158,35 +158,3 @@ Diaz Ilyasa Azrurrafi Saiful (1806200154)
     }
     count=0;
 ```
-
-### Write or Read Files
-```bash
-        //Ambil nama File
-        mvwprintw(inputwin, 1, 1, "Simpan dengan nama file: ");
-        wrefresh(inputwin);
-        wgetstr(inputwin, filename);
-
-        //Specify path
-        char cwd[PATH_MAX];
-        getcwd(cwd, sizeof(cwd));
-        dirname = "myaccount";
-        sprintf(filepath, "%s\\%s\\%s.mya", cwd, dirname, filename);
-
-        //Exporting File
-        fptr = fopen(filepath, "w"); //W to Write, R to Read
- ```
- 
- ### Create Bank Password
-- View
-![](Image/Screenshot_6.png)
-- Security Question
-![](Image/Screenshot_7.png)
-- File Encrypted
-![](Image/Screenshot_8.png)
-
-### Manage Bank Password
-- Prove File Authentication
-![](Image/Screenshot_9.png)
-- View
-You can Edit existing data , Add new Data, Change page view, Save changes to the file. 
-![](Image/Screenshot_10.png)
