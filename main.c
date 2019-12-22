@@ -3,15 +3,11 @@
 
 RECT rect;
 HINSTANCE hInst;
-PAINTSTRUCT     ps;
-HDC             hdc;
-BITMAP          bitmap;
-HDC             hdcMem;
-HGDIOBJ         oldBitmap;
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     LPSTR lpCmdLine, int nCmdShow)
 {
+    FreeConsole();
     initData();
     if (head==NULL)
         puts("null");
@@ -29,7 +25,11 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
         return FALSE;
 
     RegisterSetting(hInstance);
-    if (!SettingInstance(hInstance, nCmdShow))
+    if (!SettingInstance(hInstance))
+        return FALSE;
+
+    RegisterAbout(hInstance);
+    if (!AboutInstance(hInstance))
         return FALSE;
 
     RegisterLeaderboard(hInstance);
@@ -48,6 +48,12 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 LRESULT CALLBACK MainProc (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+    PAINTSTRUCT     ps;
+    HDC             hdc;
+    BITMAP          bitmap;
+    HDC             hdcMem;
+    HGDIOBJ         oldBitmap;
+
     if(Pressed == TRUE)
         update();
 
@@ -64,42 +70,17 @@ LRESULT CALLBACK MainProc (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         break;
 
         case WM_KEYDOWN:
-            update_position = TRUE;
-            if (point != 0 && facing==B_UP && wParam==40)
-                update_position = FALSE;
-            else if (point != 0 && facing==B_DOWN && wParam==38)
-                update_position = FALSE;
-            else if (point != 0 && facing==B_LEFT && wParam==39)
-                update_position = FALSE;
-            else if (point != 0 && facing==B_RIGHT && wParam==37)
-                update_position = FALSE;
-
-            if (update_position == TRUE)
-            {
+            if (nowKeyNumber != NULL)
+                regKey = wParam;
+            else
                 nowKeyNumber = wParam;
-                switch(wParam)
-                {
-                    case VK_UP:
-                        wsprintf(szCharKey,"Facing : UP");
-                        facing = B_UP;
-                    break;
-                    case VK_DOWN:
-                        wsprintf(szCharKey,"Facing : DOWN");
-                        facing = B_DOWN;
-                    break;
-                    case VK_LEFT:
-                        wsprintf(szCharKey,"Facing : LEFT");
-                        facing = B_LEFT;
-                    break;
-                    case VK_RIGHT:
-                        wsprintf(szCharKey,"Facing : RIGHT");
-                        facing = B_RIGHT;
-                    break;
-                    case VK_SPACE:
-                        turbo = TRUE;
-                    break;
-                }
+            switch(wParam)
+            {
+                case VK_SPACE:
+                    turbo = TRUE;
+                break;
             }
+
         break;
 
         case WM_KEYUP:
@@ -117,6 +98,8 @@ LRESULT CALLBACK MainProc (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 case PLAY_BUTTON:
                     puts("play");
                     update();
+                    if (isSound.check == TRUE)
+                        PlaySound("assets/sounds/start.wav",NULL,SND_FILENAME | SND_ASYNC );
                     ShowWindow(con_hWnd, SW_SHOW);
                     ShowWindow(game_hWnd, SW_SHOW);
                     SetTimer(hWnd,1,cpuTime,NULL);
@@ -131,6 +114,12 @@ LRESULT CALLBACK MainProc (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 case EXIT_BUTTON:
                     eksportData();
                     PostQuitMessage(0);
+                break;
+
+                case ABOUT_BUTTON:
+                    puts("leaderboard");
+                    update();
+                    ShowWindow(about_hWnd, SW_SHOW);
                 break;
 
                 case SETTINGS_BUTTON:
@@ -155,7 +144,7 @@ LRESULT CALLBACK MainProc (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         break;
 
         case WM_PAINT:
-            check_background(bkgchoice);
+            check_background();
             hBitmap = (HBITMAP)LoadImage(NULL, background, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
             hdc = BeginPaint(hWnd, &ps);
             hdcMem = CreateCompatibleDC(hdc);
@@ -173,7 +162,7 @@ LRESULT CALLBACK MainProc (HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-LRESULT CALLBACK ContentProc (HWND _hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK ContentProc (HWND con_hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch(Msg)
     {
@@ -185,17 +174,17 @@ LRESULT CALLBACK ContentProc (HWND _hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
                     destroy_game();
                 break;
                 default:
-                    return DefWindowProc(_hWnd, Msg, wParam, lParam);
+                    return DefWindowProc(con_hWnd, Msg, wParam, lParam);
             }
         break;
 
         default:
-            return DefWindowProc(_hWnd, Msg, wParam, lParam);
+            return DefWindowProc(con_hWnd, Msg, wParam, lParam);
     }
     return 0;
 }
 
-LRESULT CALLBACK LeaderboardProc (HWND _hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK LeaderboardProc (HWND leaderboard_hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch(Msg)
     {
@@ -209,16 +198,18 @@ LRESULT CALLBACK LeaderboardProc (HWND _hWnd, UINT Msg, WPARAM wParam, LPARAM lP
 
                 case RESET_BUTTON:
                     head = NULL;
+                    free(head);
                     DestroyWindow(leaderboard_hWnd);
                     LeaderboardInstance(hInst);
                 break;
+
                 default:
-                    return DefWindowProc(_hWnd, Msg, wParam, lParam);
+                    return DefWindowProc(leaderboard_hWnd, Msg, wParam, lParam);
             }
         break;
 
         default:
-            return DefWindowProc(_hWnd, Msg, wParam, lParam);
+            return DefWindowProc(leaderboard_hWnd, Msg, wParam, lParam);
     }
     return 0;
 }
@@ -232,20 +223,21 @@ LRESULT CALLBACK GameProc (HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     {
        case WM_PAINT:
 
-            //PlaySound("1.wav",NULL,SND_FILENAME | SND_ASYNC);
-
         	hMyDC=BeginPaint(hwnd, &ps);
             randStar();
             speed();
             starAndSnakeHand(hwnd,hMyDC);
             walked();
-        	show_debug(hwnd, hMyDC);
-            keyClicked();
+            spd = 50 - cpuTime;
+        	if (isDebug.check == TRUE)
+                show_debug(hwnd, hMyDC);
+            if (perform() == 1)
+            {
+                keyClicked();
+            }
             PrintTail(hwnd, hMyDC);
             outLine(hwnd);
-
             EndPaint(hwnd, &ps);
-
         break;
 
         default:
@@ -254,7 +246,7 @@ LRESULT CALLBACK GameProc (HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         return 0;
 }
 
-LRESULT CALLBACK SettingProc (HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK SettingProc (HWND setting_hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch(Msg)
     {
@@ -290,6 +282,22 @@ LRESULT CALLBACK SettingProc (HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                             update_setting();
                         }
                 break;
+                case ON_BUTTON:
+                    isDebug.check = TRUE;
+                    update_toggle(isDebug.type);
+                break;
+                case OFF_BUTTON:
+                    isDebug.check = FALSE;
+                    update_toggle(isDebug.type);
+                break;
+                case ONS_BUTTON:
+                    isSound.check = TRUE;
+                    update_toggle(isSound.type);
+                break;
+                case OFFS_BUTTON:
+                    isSound.check = FALSE;
+                    update_toggle(isSound.type);
+                break;
                 case APPLY_BUTTON:
                     destroy_setting();
                     GetWindowText(hUser, user, 16);
@@ -297,12 +305,53 @@ LRESULT CALLBACK SettingProc (HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                     puts("Applying Changes");
                 break;
                 default:
-                    return DefWindowProc(hwnd, Msg, wParam, lParam);
+                    return DefWindowProc(setting_hWnd, Msg, wParam, lParam);
             }
             break;
 
         default:
-            return DefWindowProc(hwnd, Msg, wParam, lParam);
+            return DefWindowProc(setting_hWnd, Msg, wParam, lParam);
+    }
+    return 0;
+}
+
+LRESULT CALLBACK AboutProc (HWND about_hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    PAINTSTRUCT     ps;
+    HDC             hdc;
+    BITMAP          bitmap;
+    HDC             hdcMem;
+    HGDIOBJ         oldBitmap;
+
+    switch(Msg)
+    {
+        case WM_COMMAND:
+            switch(wParam)
+            {
+                case 20:
+                    destroy_about();
+                break;
+
+                default:
+                    return DefWindowProc(about_hWnd, Msg, wParam, lParam);
+            }
+        break;
+
+        case WM_PAINT:
+            check_background();
+            hBitmap = (HBITMAP)LoadImage(NULL, background_about, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+            hdc = BeginPaint(about_hWnd, &ps);
+            hdcMem = CreateCompatibleDC(hdc);
+            oldBitmap = SelectObject(hdcMem, hBitmap);
+            GetObject(hBitmap, sizeof(bitmap), &bitmap);
+            BitBlt(hdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            SelectObject(hdcMem, oldBitmap);
+            DeleteDC(hdcMem);
+            EndPaint(about_hWnd, &ps);
+        break;
+
+        default:
+            return DefWindowProc(about_hWnd, Msg, wParam, lParam);
     }
     return 0;
 }
@@ -311,56 +360,50 @@ ATOM RegisterMain(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
-
+    wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = 0;
     wcex.lpfnWndProc    = MainProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(NULL, IDI_APPLICATION);
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON));
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = MainClass;
-    wcex.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
+    wcex.hIconSm        = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON));
 
     return RegisterClassExW(&wcex);
 }
 
 ATOM RegisterContent(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
-
-    wcex.cbSize = sizeof(WNDCLASSEX);
+    WNDCLASSW wcex;
 
     wcex.style          = 0;
     wcex.lpfnWndProc    = ContentProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(NULL, IDI_APPLICATION);
+    wcex.hIcon          = LoadIcon(hInstance, NULL);
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+6);
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = ContentClass;
-    wcex.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
 
-    return RegisterClassExW(&wcex);
+    return RegisterClassW(&wcex);
 }
 
 ATOM RegisterGame(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
-
-    wcex.cbSize = sizeof(WNDCLASSEX);
+    WNDCLASSW wcex;
 
     wcex.style          = 0;
     wcex.lpfnWndProc    = GameProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(NULL, IDI_APPLICATION);
+    wcex.hIcon          = LoadIcon(hInstance, NULL);
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
 
     LOGBRUSH background;
@@ -377,23 +420,21 @@ ATOM RegisterGame(HINSTANCE hInstance)
 
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = GameClass;
-    wcex.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
 
-    return RegisterClassExW(&wcex);
+    free(background.lbHatch);
+    return RegisterClassW(&wcex);
 }
 
 ATOM RegisterSetting(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
-
-    wcex.cbSize = sizeof(WNDCLASSEX);
+    WNDCLASSW wcex;
 
     wcex.style          = 0;
     wcex.lpfnWndProc    = SettingProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(NULL, IDI_APPLICATION);
+    wcex.hIcon          = LoadIcon(hInstance, NULL);
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
 
     LOGBRUSH background;
@@ -410,29 +451,26 @@ ATOM RegisterSetting(HINSTANCE hInstance)
 
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = SettingClass;
-    wcex.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
 
-    return RegisterClassExW(&wcex);
+    return RegisterClassW(&wcex);
 }
 
 ATOM RegisterLeaderboard(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
-
-    wcex.cbSize = sizeof(WNDCLASSEX);
+    WNDCLASSW wcex;
 
     wcex.style          = 0;
     wcex.lpfnWndProc    = LeaderboardProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(NULL, IDI_APPLICATION);
+    wcex.hIcon          = LoadIcon(hInstance, NULL);
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
 
     LOGBRUSH background;
     background.lbStyle     = BS_PATTERN;
     background.lbHatch     = (long) LoadImage(hInstance,
-                            "assets\\background\\lead.bmp",
+                            "assets/background/lead.bmp",
                             IMAGE_BITMAP,0,0,LR_LOADFROMFILE);
 
     //Set Background
@@ -442,21 +480,48 @@ ATOM RegisterLeaderboard(HINSTANCE hInstance)
         wcex.hbrBackground = (HBRUSH)GetStockObject(LTGRAY_BRUSH);
 
     wcex.lpszMenuName   = NULL;
-    wcex.lpszClassName  = GameClass;
-    wcex.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
-
-    wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = LeaderboardClass;
-    wcex.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
 
-    return RegisterClassExW(&wcex);
+    return RegisterClassW(&wcex);
 }
 
-BOOL LeaderboardInstance(HINSTANCE hInstance, int nCmdShow)
+ATOM RegisterAbout (HINSTANCE hInstance)
 {
-    hInst = hInstance; // Store instance handle in our global variable
+    WNDCLASSW wc;
 
-    center_window(GetDesktopWindow(), 960, 600);
+    wc.style          = 0;
+    wc.lpfnWndProc    = AboutProc;
+    wc.cbClsExtra     = 0;
+    wc.cbWndExtra     = 0;
+    wc.hInstance      = hInstance;
+    wc.hIcon          = LoadIcon(hInstance, NULL);
+    wc.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wc.lpszMenuName   = NULL;
+    wc.lpszClassName  = AboutClass;
+
+    return RegisterClassW(&wc);
+}
+
+BOOL AboutInstance(HINSTANCE hInstance)
+{
+    about_hWnd = CreateWindowW   (AboutClass, "About", WS_CHILD | WS_VISIBLE,
+                            0, 0, 960, 600,
+                            hWnd, NULL, hInstance, NULL);
+
+    if (!about_hWnd)
+    {
+        return FALSE;
+    }
+
+    ShowWindow(about_hWnd, SW_HIDE);
+    UpdateWindow(about_hWnd);
+    about();
+    return TRUE;
+}
+
+BOOL LeaderboardInstance(HINSTANCE hInstance)
+{
     leaderboard_hWnd = CreateWindowW   (LeaderboardClass, "Leaderboard", WS_CHILD | WS_VISIBLE,
                                     0, 0, 960, 600,
                                     hWnd, NULL, hInstance, NULL);
@@ -487,7 +552,7 @@ BOOL MainInstance(HINSTANCE hInstance, int nCmdShow)
         return FALSE;
     }
 
-    ShowWindow(hWnd, nCmdShow);
+    ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
 
     return TRUE;
@@ -496,7 +561,7 @@ BOOL MainInstance(HINSTANCE hInstance, int nCmdShow)
 BOOL ContentInstance(HINSTANCE hInstance, int nCmdShow)
 {
     con_hWnd = CreateWindowW   (ContentClass, "Content", WS_CHILD | WS_VISIBLE | WS_BORDER,
-                                20, 15, 300, 540,
+                                20, 20, wnd_W-290, wnd_H,
                                 hWnd, NULL, hInstance, NULL);
 
     if (!con_hWnd)
@@ -514,7 +579,7 @@ BOOL ContentInstance(HINSTANCE hInstance, int nCmdShow)
 BOOL GameInstance(HINSTANCE hInstance, int nCmdShow)
 {
     game_hWnd = CreateWindowW   (GameClass, "Game", WS_CHILD | WS_VISIBLE | WS_BORDER,
-                                335, 15,
+                                340, 20,
                                 wnd_W, wnd_H,
                                 hWnd, NULL, hInstance, NULL);
     GetSystemMetrics(SM_CXSCREEN);
@@ -531,11 +596,8 @@ BOOL GameInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-BOOL SettingInstance(HINSTANCE hInstance, int nCmdShow)
+BOOL SettingInstance(HINSTANCE hInstance)
 {
-    hInst = hInstance; // Store instance handle in our global variable
-
-    center_window(GetDesktopWindow(), 960, 600);
     setting_hWnd = CreateWindowW   (SettingClass, "Setting", WS_CHILD | WS_VISIBLE,
                             0, 0, 960, 600,
                             hWnd, NULL, hInstance, NULL);
@@ -572,6 +634,7 @@ int center_window(HWND parent_window, int width, int height)
 
 void destroy_game()
 {
+    PlaySound(NULL, 0, 0);
     ShowWindow(con_hWnd, SW_HIDE);
     ShowWindow(game_hWnd, SW_HIDE);
     Pressed = TRUE;
@@ -579,8 +642,14 @@ void destroy_game()
 
 void destroy_setting()
 {
-        ShowWindow(setting_hWnd, SW_HIDE);
-        Pressed = TRUE;
+    ShowWindow(setting_hWnd, SW_HIDE);
+    Pressed = TRUE;
+}
+
+void destroy_about()
+{
+    ShowWindow(about_hWnd, SW_HIDE);
+    Pressed = TRUE;
 }
 
 void content()
@@ -590,22 +659,54 @@ void content()
 
 void setting()
 {
+        //PlayerName Setting
         CreateWindowW(L"Button", L"Player Name", WS_VISIBLE | WS_CHILD, 240, 20, 100, 30, setting_hWnd, NULL, NULL, NULL);
         hUser = CreateWindowW(L"Edit", L"Default", WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | WS_BORDER, 350, 20, 300, 30, setting_hWnd, NULL, NULL, NULL);
+        //Background Setting
         hBackground1 = CreateWindowW(L"Button", L"1", WS_VISIBLE | WS_CHILD | BS_BITMAP, 75, 70, 192, 120, setting_hWnd, (HMENU)BKG1_BUTTON, NULL, NULL);
         hBackground2 = CreateWindowW(L"Button", L"2", WS_VISIBLE | WS_CHILD | BS_BITMAP, 277, 70, 192, 120, setting_hWnd, (HMENU)BKG2_BUTTON, NULL, NULL);
         hBackground3 = CreateWindowW(L"Button", L"3", WS_VISIBLE | WS_CHILD | BS_BITMAP, 479, 70, 192, 120, setting_hWnd, (HMENU)BKG3_BUTTON, NULL, NULL);
         hBackground4 = CreateWindowW(L"Button", L"4", WS_VISIBLE | WS_CHILD | BS_BITMAP, 681, 70, 192, 120, setting_hWnd, (HMENU)BKG4_BUTTON, NULL, NULL);
-        hApply = CreateWindowW(L"Button", L"Apply", WS_VISIBLE | WS_CHILD , 230, 510, 500, 40, setting_hWnd, (HMENU)APPLY_BUTTON, NULL, NULL);
         update_setting();
+        //Apply Button
+        hApply = CreateWindowW(L"Button", L"APPLY", WS_VISIBLE | WS_CHILD , 230, 510, 500, 40, setting_hWnd, (HMENU)APPLY_BUTTON, NULL, NULL);
+        //Debug Setting
+        CreateWindowW(L"Button", L"DISPLAY DEBUG", WS_VISIBLE | WS_CHILD , 75, 220, 200, 40, setting_hWnd, NULL, NULL, NULL);
+        hOn = CreateWindowW(L"Button", L"ON", WS_VISIBLE | WS_CHILD  | BS_BITMAP, 330, 220, 100, 40, setting_hWnd, (HMENU)ON_BUTTON, NULL, NULL);
+        hOff = CreateWindowW(L"Button", L"OFF", WS_VISIBLE | WS_CHILD | BS_BITMAP, 430, 220, 100, 40, setting_hWnd, (HMENU)OFF_BUTTON, NULL, NULL);
+        update_toggle(isDebug.type);
+        //Sound Setting
+        CreateWindowW(L"Button", L"PLAY SOUND", WS_VISIBLE | WS_CHILD , 75, 280, 200, 40, setting_hWnd, NULL, NULL, NULL);
+        hOnS = CreateWindowW(L"Button", L"ON", WS_VISIBLE | WS_CHILD | BS_BITMAP, 330, 280, 100, 40, setting_hWnd, (HMENU)ONS_BUTTON, NULL, NULL);
+        hOffS = CreateWindowW(L"Button", L"OFF", WS_VISIBLE | WS_CHILD | BS_BITMAP, 430, 280, 100, 40, setting_hWnd, (HMENU)OFFS_BUTTON, NULL, NULL);
+        update_toggle(isSound.type);
+}
+
+void about()
+{
+    HWND hImage;
+    hReturn = CreateWindowW(L"Button", L"BACK", WS_VISIBLE | WS_CHILD , 230, 510, 500, 40, about_hWnd, (HMENU)20, NULL, NULL);
+    hRamdan = CreateWindowW(L"Button", L"Creator", WS_VISIBLE | WS_CHILD | BS_BITMAP , 100, 30, 120, 160, about_hWnd, NULL, NULL, NULL);
+    hDiaz = CreateWindowW(L"Button", L"Creator", WS_VISIBLE | WS_CHILD | BS_BITMAP, 730, 30, 120, 160, about_hWnd, NULL, NULL, NULL);
+    HWND hBar = CreateWindowW(L"Button", L"NAME", WS_VISIBLE | WS_CHILD | BS_BITMAP, 220, 130, 510, 60, about_hWnd, NULL, NULL, NULL);
+    HWND hBar2 = CreateWindowW(L"Button", L"NAME", WS_VISIBLE | WS_CHILD | BS_BITMAP, 220, 70, 510, 60, about_hWnd, NULL, NULL, NULL);
+
+    hImage = (HBITMAP)LoadImageW(NULL, L"assets\\ramdanbar.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    SendMessageW(hBar, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hImage);
+    hImage = (HBITMAP)LoadImageW(NULL, L"assets\\diazbar.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    SendMessageW(hBar2, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hImage);
+    hImage = (HBITMAP)LoadImageW(NULL, L"assets\\ramdan.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    SendMessageW(hRamdan, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hImage);
+    hImage = (HBITMAP)LoadImageW(NULL, L"assets\\diaz.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    SendMessageW(hDiaz, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hImage);
 }
 
 void leaderboard()
 {
     //Sort Data Structure
     sorting();
-    hReset = CreateWindowW(L"Button", L"Reset", WS_VISIBLE | WS_CHILD , 839, 11, 94, 88, leaderboard_hWnd, (HMENU)RESET_BUTTON, NULL, NULL);
-    hBackLead = CreateWindowW(L"Button", L"Back", WS_VISIBLE | WS_CHILD , 15, 11, 94, 88, leaderboard_hWnd, (HMENU)BACK_BUTTON, NULL, NULL);
+    hReset = CreateWindowW(L"Button", L"Reset", WS_VISIBLE | WS_CHILD , 839, 10, 94, 88, leaderboard_hWnd, (HMENU)RESET_BUTTON, NULL, NULL);
+    hBackLead = CreateWindowW(L"Button", L"Back", WS_VISIBLE | WS_CHILD , 15, 10, 94, 88, leaderboard_hWnd, (HMENU)BACK_BUTTON, NULL, NULL);
     struct node *ptr = head;
     WCHAR namebar[16];
     WCHAR score[8];
@@ -632,6 +733,7 @@ void leaderboard()
         ptr = ptr->next;
         yAdder++;
         loop++;
+        //Membatasi Banyaknya Tampilan Window di Leaderboard
         if (loop>=14)
             break;
     }
@@ -643,4 +745,23 @@ void update_welcome(HWND hWnd)
     sprintf(szWelcome, "Welcome : %s", user);
     swprintf(welcome_char, L"%S", szWelcome);
     hWelcome = CreateWindowW(L"Button", welcome_char, WS_VISIBLE | WS_CHILD, 20, 130, 200, 30, hWnd, NULL, NULL, NULL);
+}
+
+int perform()
+{
+    if ((nowX%30 - 12) == 0)
+    {
+        if ((nowY%30 - 12) == 0)
+        {
+            return 1;
+        }
+        nowX = nowX + moveX;
+        nowY = nowY + moveY;
+    }
+    else
+    {
+        nowX = nowX + moveX;
+        nowY = nowY + moveY;
+        return 0;
+    }
 }

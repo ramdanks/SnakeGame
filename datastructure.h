@@ -72,7 +72,7 @@ void initData()
     char filepath[128];
     sprintf(filepath, "%s/%s", dirname, filename);
 
-    //Exporting File
+    //Importing File
     fp = fopen(filepath, "r");
     if (fp != NULL)
     {
@@ -149,27 +149,33 @@ void sorting()
 
     for(i = 0 ; i < count*count; i++)
     {
+        //Apabila Data Pertama lebih kecil dari Data Setelahnya
         if (ptr->point < ptr2->point)
         {
             //Simpan ptr(1st) ke Temp
             temp_p = ptr->point;
             strcpy(temp_n, ptr->name);
+
             //Masukkan data ptr(2nd) ke ptr(1st)
             ptr->point = ptr2->point;
             strcpy(ptr->name, ptr2->name);
-            //Masukan ptr(1st) yang telah disimpan diTemp ke ptr(2nd)
+
+            //Masukan ptr(1st) yang telah disimpan ke ptr(2nd)
             ptr2->point = temp_p;
             strcpy(ptr2->name, temp_n);
+
             //Lanjut looping untuk data selanjutntya
             ptr = ptr->next;
             ptr2 = ptr2->next;
-            //ptr ga perlu di set ke ptr->next, karena nilai ptr kan sudah di swap sama ptr2
+
+            //Apabila Data selanjutnya kosong, ulangi dari awal proses sorting.
             if (ptr2 == NULL)
             {
                 ptr = head;
                 ptr2 = ptr->next;
             }
         }
+        //Lanjutkan Pengecekan ke Data Selanjutnya
         else
         {
             ptr = ptr->next;
